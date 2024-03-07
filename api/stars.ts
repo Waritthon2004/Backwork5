@@ -44,7 +44,7 @@ router.get("/:name", (req, res) => {
     }
   });
 
-  let sql1 = `SELECT * FROM Movie_R WHERE Name LIKE ?`;
+  let sql1 = `SELECT distinct * FROM Movie_R WHERE Name LIKE ?`;
   sql1 = mysql.format(sql1, [`%${req.params.name}%`]);
   conn.query(sql1, (err, result) => {
     if (err) {
