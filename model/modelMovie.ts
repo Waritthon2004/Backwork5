@@ -18,6 +18,7 @@ export interface resMovie {
     day:    string;
     head:   string;
     Actor:  Actor[];
+    Creaters : Creaters[];
 }
 
 
@@ -26,7 +27,6 @@ export interface Actor {
     Name:   string;
     Image:  string;
     detail: string;
-    Creaters : Creaters[];
 }
 
 
