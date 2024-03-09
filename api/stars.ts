@@ -23,45 +23,72 @@ router.get("/:name", async (req, res) => {
     if (err) {
       res.status(400).json(err);
     } else {
-      let Movies : resMovie[] = result.map((movie : any)=>{
-        return{
-          MID:    movie.MID,
-          Name:   movie.Name,
-          Image:  movie.Image,
-          Type:   movie.Type,
+      let Movies: resMovie[] = result.map((movie: any) => {
+        return {
+          MID: movie.MID,
+          Name: movie.Name,
+          Image: movie.Image,
+          Type: movie.Type,
           detail: movie.detail,
           rating: movie.rating,
-          day:    movie.day,
-          head:   movie.head,
-          Actor:  []
-        }
+          day: movie.day,
+          head: movie.head,
+          Actor: []
+        };
       });
-      for(let index = 0; index < Movies.length; index++) {
-        let result1 : any= await new Promise((resolve, reject) => {
-          conn.query("SELECT distinct Person_R.* FROM Movie_R,Stars_R,Person_R WHERE Movie_R.MID=Stars_R.SMID and Stars_R.SPID = Person_R.PID and  Movie_R.Name LIKE ?",['%' + Movies[index].Name + '%'],(err,result)=>{
-            if(err) reject(err);
+      for (let index = 0; index < Movies.length; index++) {
+        console.log(Movies[index].Name);
+        let result1: any = await new Promise((resolve, reject) => {
+          conn.query("SELECT distinct Person_R.* FROM Movie_R,Stars_R,Person_R WHERE Movie_R.MID=Stars_R.SMID and Stars_R.SPID = Person_R.PID and  Movie_R.Name LIKE ?", ['%' + Movies[index].Name + '%'], (err, result) => {
+            if (err) reject(err);
             resolve(result);
           });
         });
-        let Actor : Actor[] = result1.map((actor : any)=>{
-          return{
-            PID:    actor.PID,
-            Name:   actor.Name,
-            Image:  actor.Image,
-            detail: actor.detail,
-          }
-        });
-        Movies[index].Actor = Actor;
   
-        let result2 :any = await new Promise((resolve, reject) => {
-          conn.query("SELECT distinct Person_R.* FROM Movie_R,creators_R,Person_R WHERE Movie_R.MID=creators_R.CMID and creators_R.CPID = Person_R.PID and  Movie_R.Name LIKE ?",['%' + Movies[index].Name + '%'],(err,result)=>{
-            if(err) reject(err);
-            resolve(result);
-          });
+        let Actor: Actor[] = result1.map((actor: any) => {
+          return {
+            PID: actor.PID,
+            Name: actor.Name,
+            Image: actor.Image,
+            detail: actor.detail,
+
+          };
         });
-        Movies[index].Actor[Actor.length-1].Creaters = result2;
+
+        Movies[index].Actor = Actor;
+
+        if (Actor.length > 0) {
+          let result2: any = await new Promise((resolve, reject) => {
+            conn.query("SELECT distinct Person_R.* FROM Movie_R,creators_R,Person_R WHERE Movie_R.MID=creators_R.CMID and creators_R.CPID = Person_R.PID and  Movie_R.Name LIKE ?", ['%' + Movies[index].Name + '%'], (err, result) => {
+              if (err) reject(err);
+              resolve(result);
+            });
+          });
+
+          Movies[index].Actor[Actor.length - 1].Creaters = result2;
+        }
+
+        if (Actor.length == 0) {
+          let result2: any = await new Promise((resolve, reject) => {
+            conn.query("SELECT distinct Person_R.* FROM Movie_R,creators_R,Person_R WHERE Movie_R.MID=creators_R.CMID and creators_R.CPID = Person_R.PID and  Movie_R.Name LIKE ?", ['%' + Movies[index].Name + '%'], (err, result) => {
+              if (err) reject(err);
+              resolve(result);
+            });
+          });
+          if(result2.length >0){
+            Movies[index].Actor[0] = {
+              PID: 404,
+              Name: '',
+              Image: '',
+              detail: '',
+              Creaters: result2
+            };
+          }
+       
+        }
+
       }
-      
+
       res.status(200).json(Movies);
     }
   });
